@@ -20,6 +20,16 @@ jobs:
         run: |
           curl --silent -X PUT localhost:5984/_users
           curl --silent -X PUT localhost:5984/_users/org.couchdb.user:alice -H 'Accept:application/json' -H 'Content-Type:application/json' -d '{"name":"alice", "password":"whiterabbit", "roles":[], "type":"user"}'
+      - name: Run https proxy
+        run: |
+          sudo snap install ngrok
+          ngrok http 80 -bind-tls=true > /dev/null &
+      - name: Get server URI
+        run: |
+          export SERV_HOST=$(curl --silent http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+          echo $SERV_HOST
+          sed -i "s,http://localhost,$SERV_HOST," public/config.yml
+          cat public/config.yml
       - name: Install Porphyry
         run: |
           npm install
